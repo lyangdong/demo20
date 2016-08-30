@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+    <style type="text/css">
+        *{
+            padding: 0px;
+            margin: 0px;
+        }
+       #list{
+           background-color: #242424;
+           width: 100%;
+       }
+        #list ul{
+            height: 380px;
+            width: 420px;
+            border-top: 3px solid #039abe;
+            border-bottom: 1px solid #cccccc;
+            background-color: #242424;
+            overflow: scroll;
+
+
+        }
+        #list ul li{
+            width: 380px;
+            border-bottom: 1px solid #777e7c;
+            list-style: none;
+            padding: 0 5px;
+        }
+        #list ul li h2{
+            color: #059ab7;
+            font-size: 14px;
+            font-weight: bold;
+            padding-top: 8px;
+        }
+        #list ul li .header-button{
+            font-size: 12px;
+            color: #777e7c;
+            padding: 5px 0px;
+        }
+        #list .media{
+            color: white;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+        #list .footer{
+            text-align: right;
+            color: #999999;
+            padding-bottom: 5px ;
+        }
+        #list .footer a{
+            color: #999999;
+            font-size: 10px;
+            text-decoration: none;
+        }
+        .addBox{
+            position: absolute;
+            top: 40px;
+            left: 400px;
+            background-color: white;
+            display: none;
+        }
+        input{
+            display: block;
+            width: 400px;
+        }
+        .active{
+           background-color: #666666;
+        }
+        .editBox{
+            position: absolute;
+            top: 40px;
+            left: 400px;
+            background-color: white;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <p>列表</p>
+    <button class="addButton" type="button">添加</button>
+    <div class="addBox">
+        标题 :<input name="title" type="text"/>
+        标签 :<input name="tag" type="text"/>
+        内容 :<input name="content" type="text"/>
+        <button class="confirm" type="button">确定</button>
+        <button class="shutdown" type="button">取消</button>
+        <button class="clear-button" type="button">清零</button>
+    </div>
+    <div class="editBox">
+        标题 :<input name="title" type="text"/>
+        标签 :<input name="tag" type="text"/>
+        内容 :<input name="content" type="text"/>
+        <button class="confirm" type="button">确定</button>
+        <button class="shutdown" type="button">取消</button>
+        <button class="clear-button" type="button">清零</button>
+    </div>
+    <button class="removeButton" type="button">删除</button>
+    <button class="editButton" type="button">编辑</button>
+    <div id="list">
+        <ul>
+        </ul>
+    </div>
+</body>
+<script>
+    $(function(){
+        //请求数据
+        $.ajax({
+            type:'get',
+            url:'http://www.xwl.date/getBlog',
+            success:function(data,callback){
+                var dataArray = data.data;
+                var html ="";
+                // var removeTime = '2015-10-28';
+                // dataArray.push({ modify_time :removeTime})
+                // alert(dataArray)
+                dataArray.sort(function(a,b){
+                    return new Date(a.modify_time.replace(/.000Z/i," ").replace(/T/i," ")).getTime()
+                            - new Date(b.modify_time.replace(/.000Z/i," ").replace(/T/i," ")).getTime()
+                })
+                //dataArray.indexOf = function(modify_time){
+                  //  for(var i= 0; i< dataArray.length;i++){
+                    //    if(dataArray[i].modify_time == modify_time){
+                      //      return i;
+                //    }
+                  //  }
+                //}
+
+               // var i= dataArray.indexOf(removeTime)
+                //alert(i)
+                //dataArray.splice(0,i+1);
+                for(var i=0;i<data.data.length;i++){
+                    var time = dataArray[i].modify_time.replace(/.000Z/i," ").replace(/T/i," ")
+                    html += '<li>'+
+                            '<h2 class="header">'+dataArray[i].title +'</h2>'+
+                            '<p class="header-button">' +  ' 发布时间:' +  '<span class="time">'+ time +' </span>'+
+                            ' 标签:'+ '<span class="tag">'+dataArray[i].tag + '</span></p>'+
+                            '<p class="media">' + dataArray[i].abstract +  '</p><p class="footer">' + '<a href="">阅读全文...</a></p>'
+                            '</li>';
+                }
+                $('ul').append(html);
+                $('li').filter(function(index){
+                    return new Date(dataArray[index].modify_time.replace(/.000Z/i," ").replace(/T/i," ")).getTime() <
+                            new Date("2015-10-28").getTime();
+
+                }).css('display','none');
+                callback(myEdit());
+            },
+            error:function(){
+                alert(321)
+            }
+        });
+        //关闭
+        $('.shutdown').click(function(){
+            myShutdown()
+        });
+        //清除按钮
+        $('.clear-button').click(function(){
+            myClear()
+        });
+        //添加功能
+        $('.addButton').click(function () {
+            $('.addBox').fadeToggle('display');
+        });
+        //确认添加
+        $('.confirm').click(function(callback){
+            $('.active').css('display','none')
+            if( $(this).siblings('[name=title]').val().replace(/\s/g,'') === ''){
+                alert('输入标题')
+            }else if( $(this).siblings('[name=tag]').val().replace(/\s/g,'') === ''){
+                alert('输入标签')
+            } else if( $(this).siblings('[name=content]').val().replace(/\s/g,'') === ''){
+                alert('输入内容')
+            }else{
+                var t = new Date();
+                var time = t.getFullYear()+'-'+ t.getMonth()+'-'+ t.getDate()+' '+ t.getHours() + ':' + t.getMinutes() +  ':'+ t.getSeconds();
+                var html =  '<li>'+
+                        '<h2 class="header">'+$(this).siblings('[name=title]').val() +'</h2>'+
+                        '<p class="header-button">' +  ' 发布时间:' +  '<span class="time">'+ time +' </span>'+
+                        ' 标签:'+ '<span class="tag">'+ $(this).siblings('[name=tag]').val() + '</span></p>'+
+                        '<p class="media">' + $(this).siblings('[name=content]').val() +  '</p><p class="footer">' + '<a href="">阅读全文...</a></p>'
+                '</li>';
+                $('ul').append(html);
+                myClear();
+                myShutdown();
+                callback(myEdit());
+            }
+        });
+        myEdit()
+    });
+    //清除表单内容
+    function myClear(){
+        $('[name=title]').val('');
+        $('[name=tag]').val('');
+        $('[name=content]').val('');
+    }
+    //关闭方法
+    function myShutdown(){
+        $('.addBox,.editBox').css('display','none')
+    }
+    //删除方法
+    function myEdit(){
+        $('li').click(function(){
+            $('li').removeClass('active');
+            $(this).addClass('active');
+            $('.editBox').css('display','block');
+            $('.editBox input[name=title]').val($(this).find('.header').text());
+            $('.editBox input[name=tag]').val($(this).find('.tag').text());
+            $('.editBox input[name=content]').val($(this).find('.media').text())
+        });
+        $('li').dblclick(function(){
+            var r = confirm('确认删除吗')
+            if( r==true){
+                $(this).css('display','none')
+            }
+        })
+        $('.removeButton').click(function(){
+            $('.active').css('display','none')
+        });
+    }
+    //编辑
+</script>
+</html>
